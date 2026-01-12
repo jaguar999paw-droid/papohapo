@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MYSQL_DATABASE: election
+      MYSQL_USER: election_user
+      MYSQL_PASSWORD: election_pass
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - internal
+
+  backend:
+    build: backend
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8081:80"
+    networks:
+      - internal
+
+  frontend:
+    build: frontend
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/var/www/html
+    ports:
+      - "8080:80"
+    networks:
+      - internal
+
+networks:
+  internal:
+
+volumes:
+  db_data:

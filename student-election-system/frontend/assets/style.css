@@ -1,0 +1,5 @@
+body{font-family:system-ui,sans-serif;background:#f8fafc;color:#0f172a}
+.centered{display:flex;justify-content:center;align-items:center;height:100vh}
+.card{background:white;padding:2rem;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.1);width:320px}
+input,button{width:100%;margin-top:1rem;padding:.7rem}
+button{background:#1e40af;color:white;border:none;border-radius:8px}
