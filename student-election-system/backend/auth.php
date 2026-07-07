@@ -17,7 +17,8 @@ if($user && password_verify($password,$user['password_hash'])){
     $_SESSION['uid']=$user['id'];
     $_SESSION['role']=$user['role'];
     $_SESSION['faculty_id']=$user['faculty_id'];
-    header("Location: http://frontend/dashboard.php");
+    $frontend = getenv('FRONTEND_ORIGIN') ?: 'http://localhost:8080';
+    header("Location: $frontend/dashboard.php");
     exit;
 }
 http_response_code(401);

@@ -4,10 +4,10 @@ services:
   db:
     image: mariadb:11
     environment:
-      MYSQL_DATABASE: election
-      MYSQL_USER: election_user
-      MYSQL_PASSWORD: election_pass
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DB_NAME:-election}
+      MYSQL_USER: ${DB_USER:-election_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -18,8 +18,14 @@ services:
     build: backend
     depends_on:
       - db
+    environment:
+      DB_NAME: ${DB_NAME:-election}
+      DB_USER: ${DB_USER:-election_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8080}
     volumes:
       - ./backend:/var/www/html
+      - session_data:/sessions
     ports:
       - "8081:80"
     networks:
@@ -29,15 +35,41 @@ services:
     build: frontend
     depends_on:
       - backend
+    environment:
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://localhost:8081}
     volumes:
       - ./frontend:/var/www/html
+      - session_data:/sessions
     ports:
       - "8080:80"
     networks:
       - internal
+
+  # Optional: exposes the frontend over your tailnet (or Headscale-controlled
+  # tailnet) instead of raw host ports. Disabled by default.
+  # Enable with: docker compose --profile tailscale up -d
+  # After it's up, run once: docker compose exec tailscale tailscale serve --bg 80
+  tailscale:
+    image: tailscale/tailscale:latest
+    profiles: ["tailscale"]
+    hostname: ${TS_HOSTNAME:-papohapo-election}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_EXTRA_ARGS: ${TS_EXTRA_ARGS:-}
+      TS_STATE_DIR: /var/lib/tailscale
+    volumes:
+      - tailscale_state:/var/lib/tailscale
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: service:frontend
+    depends_on:
+      - frontend
 
 networks:
   internal:
 
 volumes:
   db_data:
+  session_data:
+  tailscale_state:
